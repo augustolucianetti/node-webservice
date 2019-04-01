@@ -149,25 +149,31 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 /**
  * @swagger
  *
- * /veiculo/status:
+ * /veiculo/status/{id}:
  *   get:
  *     tags:
  *       - Veículos
  *     description: Buscar status do veículo 
  *     produces:
  *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Id do carro a ser buscado.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: status
  */
-app.get('/veiculo/status', function (req, res) {
-  res.json({status : 'livre'});
+app.get('/veiculo/status/:id', function (req, res) {
+  res.json({status : 'livre', id: req.params.id});
 })
 
 /**
  * @swagger
  *
- * /veiculo/status:
+ * /veiculo/status/{id}:
  *   post:
  *     tags:
  *       - Veículos
@@ -181,14 +187,19 @@ app.get('/veiculo/status', function (req, res) {
  *         required: true
  *         type: string
  *         schema: 
- *           - $ref: '#/definitions/Status'
+ *           $ref: '#/definitions/Status'
+ *       - name: id
+ *         description: Id do carro a ser buscado.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: status
  *         schema: 
  *           $ref: '#/definitions/Status'
  */
-app.post('/veiculo/status', function (req, res) {
+app.post('/veiculo/status/:id', function (req, res) {
   console.log('request', req.body.status);
   res.send(req.body);
 })
@@ -196,7 +207,7 @@ app.post('/veiculo/status', function (req, res) {
 /**
  * @swagger
  *
- * /veiculo/status:
+ * /veiculo/status/{id}:
  *   put:
  *     tags:
  *       - Veículos
@@ -210,14 +221,19 @@ app.post('/veiculo/status', function (req, res) {
  *         required: true
  *         type: string
  *         schema: 
- *           - $ref: '#/definitions/Status'
+ *           $ref: '#/definitions/Status'
+ *       - name: id
+ *         description: Id do carro a ser buscado.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: status
  *         schema: 
  *           $ref: '#/definitions/Status'
  */
-app.put('/veiculo/status', function (req, res) {
+app.put('/veiculo/status/:id', function (req, res) {
   console.log('request do put', req.body.status);
   res.send(req.body);
 })
@@ -229,26 +245,33 @@ app.get('/erro', function(req, res) {
 /**
  * @swagger
  *
- * /veiculo/dados:
+ * /veiculo/dados/{id}:
  *   get:
  *     tags:
  *       - Veículos
  *     description: Incluir status do veículo 
  *     produces:
  *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Id do carro a ser buscado.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: Carro
  *         schema: 
  *           $ref: '#/definitions/Carro'
  */
-app.get('/veiculo/dados', function (req, res) {
+app.get('/veiculo/dados/:id', function (req, res) {
   let carro = {
     ano : 2019,
     placa : "BPM-1234",
     cor : "preto",
     nome_dono : "Percival Rocha",
-    status : "livre"
+    status : "livre",
+    id : req.params.id
   }
   res.send(carro);
 })
@@ -256,26 +279,33 @@ app.get('/veiculo/dados', function (req, res) {
 /**
  * @swagger
  *
- * /veiculo/corrida:
+ * /veiculo/{idVeiculo}/corrida:
  *   post:
  *     tags:
  *       - Veículos
  *     description: Iniciar corrida 
  *     produces:
  *       - application/json
+ *     parameters:
+ *       - name: idVeiculo
+ *         description: Id do veículo que irá fazer a corrida.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: Corrida
  *         schema: 
  *           $ref: '#/definitions/Corrida'
  */
-app.post('/veiculo/corrida', function (req, res) {
+app.post('/veiculo/:idVeiculo/corrida', function (req, res) {
   let carro = {
     ano : 2019,
     placa : "BPM-1234",
     cor : "preto",
     nome_dono : "Percival Rocha",
-    status : "livre"
+    status : "livre",
+    id : req.params.idVeiculo
   }
 
   let passageiro = {
@@ -354,7 +384,8 @@ app.put('/veiculo/corrida/:id', function (req, res) {
       numero : 100,
       bairro : "Moooca",
       cidade : "São Paulo",
-      estado : "SP"
+      estado : "SP",
+      id : req.params.id
     },
     destino : {
       endereco : "Alameda Bertioga",
