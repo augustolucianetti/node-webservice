@@ -1,6 +1,5 @@
 var express = require('express');
 var cors = require('cors');
-var load = require('express-load');
 var router = express.Router();
 const bodyParser = require('body-parser');
 const swaggerJSDoc = require('swagger-jsdoc');
@@ -8,9 +7,6 @@ const swaggerUi = require('swagger-ui-express');
 const nconf = require('nconf');
 var app = express();
 
-load('models')
-  .then('controllers')
-  .into(app);
 //eventos do mongodb
 var mongoose = require('mongoose');
 //global.db = mongoose.connect('mongodb+srv://root:root@cluster0-xehd2.mongodb.net/banco_veiculos?retryWrites=true');
@@ -124,7 +120,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
  *   get:
  *     tags:
  *       - Veículos
- *     description: Buscar status do veículo 
+ *     description: Incluir status do veículo 
  *     produces:
  *       - application/json
  *     parameters:
@@ -148,6 +144,7 @@ app.get('/veiculo/status/:idCarro', function (req, res) {
       res.send("Carro não encontrado");
     }
 });
+
 })
 
 /**
@@ -169,7 +166,7 @@ app.get('/veiculo/status/:idCarro', function (req, res) {
  *         schema: 
  *           $ref: '#/definitions/Status'
  *       - name: idCarro
- *         description: Id do carro a ser alterado.
+ *         description: Id do carro a ser altera
  *         in: path
  *         required: true
  *         type: number
