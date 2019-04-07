@@ -193,7 +193,7 @@ app.put('/veiculo/status/:idCarro', function (req, res) {
         var query = {'id' : carroJaCadastrado.id}
         CarroSchema.findOneAndUpdate(query, carroJaCadastrado, {upsert:true}, function(err, doc){
           if (err) return res.send(500, { error: err });
-          return res.status(200).send(carroJaCadastrado.status);
+          return res.status(200).send({ status : carroJaCadastrado.status});
       });
     } else {
       res.send("Carro não encontrado");
