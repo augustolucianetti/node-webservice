@@ -136,7 +136,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.get('/veiculo/status/:idCarro', function (req, res) {
   
   CarroSchema.findOne({id : req.params.idCarro}, function (erro, carroJaCadastrado) {
-    console.log('status do carro:' + carroJaCadastrado.status);
     if (carroJaCadastrado) {
         carroJaCadastrado.status
         res.status(200).send({status : carroJaCadastrado.status});
