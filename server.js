@@ -1,13 +1,46 @@
 var express = require('express');
 var cors = require('cors');
+var load = require('express-load');
 var router = express.Router();
 const bodyParser = require('body-parser');
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const nconf = require('nconf');
 var app = express();
-app.use(cors());
 
+load('models')
+  .then('controllers')
+  .into(app);
+//eventos do mongodb
+var mongoose = require('mongoose');
+//global.db = mongoose.connect('mongodb+srv://root:root@cluster0-xehd2.mongodb.net/banco_veiculos?retryWrites=true');
+global.db = mongoose.connect('mongodb://carroMongo:carroMongo1@ds133556.mlab.com:33556/carro?retryWrites=true');
+mongoose.connection.on('connected', function () {
+  console.log('=====Conexão estabelecida com sucesso=====');
+});
+mongoose.connection.on('error', function (err) {
+  console.log('=====Ocorreu um erro: ' + err);
+});
+mongoose.connection.on('disconnected', function () {
+  console.log('=====Conexão finalizada=====');
+});
+
+var Schema = mongoose.Schema;
+    
+var carroSchema = Schema({
+    id: { type: Number, required: true },
+    ano : { type: Number},
+    placa: { type: String},
+    cor: { type: String },
+    modelo: { type: String},
+    longitude: { type: Number},
+    latitude: { type: Number},
+    status: {type: String}
+});
+
+var CarroSchema = mongoose.model("carros", carroSchema);
+
+app.use(cors());
 app.use(express.static('./public'));
 app.use(bodyParser.urlencoded({
   extended: false
@@ -63,140 +96,64 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
  *   Carro:
  *     type: object
  *     required:
+ *       - id
  *       - ano
  *       - placa
  *       - cor
- *       - nome_dono
+ *       - modelo
  *       - status
  *     properties:
+ *       id:
+ *         type: Number   
  *       ano:
  *         type: Number
  *       placa:
  *         type: string
  *       cor: 
  *         type: string
- *       nome_dono:
+ *       modelo:
  *         type: string
  *       status: 
- *           $ref: '#/definitions/Status'
+ *         type: string
  */
 
 /**
  * @swagger
  *
- * definitions:
- *   Passageiro:
- *     type: object
- *     required:
- *       - nome
- *       - cpf
- *     properties:
- *       nome:
- *         type: string
- *       cpf:
- *         type: string
- *       idade: 
- *         type: Number
- *       sexo:
- *         type: string
- */
-
- /**
- * @swagger
- *
- * definitions:
- *   Endereco:
- *     type: object
- *     required:
- *       - endereco
- *       - numero
- *       - bairro
- *       - cidade
- *       - estado
- *     properties:
- *       endereco:
- *         type: string
- *       numero:
- *         type: Number
- *       cidade: 
- *         type: string
- *       estado:
- *         type: string
- */
-
- /**
- * @swagger
- *
- * definitions:
- *   Corrida:
- *     type: object
- *     required:
- *       - carro
- *       - passageiro
- *       - origem
- *       - destino
- *     properties:
- *       carro:
- *           $ref: '#/definitions/Carro'
- *       Passageiro:
- *         $ref: '#/definitions/Passageiro'
- *       origem: 
- *         $ref: '#/definitions/Endereco'
- *       destino:
- *         $ref: '#/definitions/Endereco'
- */
-
-/**
- * @swagger
- *
- * /veiculo/status:
+ * /veiculo/status/{idCarro}:
  *   get:
  *     tags:
  *       - Veículos
  *     description: Buscar status do veículo 
  *     produces:
  *       - application/json
- *     responses:
- *       200:
- *         description: status
- */
-app.get('/veiculo/status', function (req, res) {
-  res.json({status : 'livre'});
-})
-
-/**
- * @swagger
- *
- * /veiculo/status:
- *   post:
- *     tags:
- *       - Veículos
- *     description: Incluir status do veículo 
- *     produces:
- *       - application/json
  *     parameters:
- *       - name: status
- *         description: Status a ser passado para o veículo.
- *         in: body
+ *       - name: idCarro
+ *         description: Id do carro que quer saber o status
+ *         in: path
  *         required: true
- *         type: string
- *         schema: 
- *           - $ref: '#/definitions/Status'
+ *         type: number
  *     responses:
  *       200:
  *         description: status
- *         schema: 
- *           $ref: '#/definitions/Status'
  */
-app.post('/veiculo/status', function (req, res) {
-  console.log('request', req.body.status);
-  res.send(req.body);
+app.get('/veiculo/status/:idCarro', function (req, res) {
+  
+  CarroSchema.findOne({id : req.params.idCarro}, function (erro, carroJaCadastrado) {
+    console.log('status do carro:' + carroJaCadastrado.status);
+    if (carroJaCadastrado) {
+        carroJaCadastrado.status
+        res.status(200).send({status : carroJaCadastrado.status});
+    } else {
+      res.send("Carro não encontrado");
+    }
+});
 })
 
 /**
  * @swagger
  *
- * /veiculo/status:
+ * /veiculo/status/{idCarro}:
  *   put:
  *     tags:
  *       - Veículos
@@ -210,16 +167,36 @@ app.post('/veiculo/status', function (req, res) {
  *         required: true
  *         type: string
  *         schema: 
- *           - $ref: '#/definitions/Status'
+ *           $ref: '#/definitions/Status'
+ *       - name: idCarro
+ *         description: Id do carro a ser alterado.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: status
  *         schema: 
  *           $ref: '#/definitions/Status'
  */
-app.put('/veiculo/status', function (req, res) {
-  console.log('request do put', req.body.status);
-  res.send(req.body);
+app.put('/veiculo/status/:idCarro', function (req, res) {
+
+  console.log('request', req.body.status);
+
+  CarroSchema.findOne({id : req.params.idCarro}, function (erro, carroJaCadastrado) {
+    console.log('carro:' + carroJaCadastrado);
+    if (carroJaCadastrado) {
+        carroJaCadastrado.status = req.body.status;
+        console.log("após aleracao do status" ,carroJaCadastrado);
+        var query = {'id' : carroJaCadastrado.id}
+        CarroSchema.findOneAndUpdate(query, carroJaCadastrado, {upsert:true}, function(err, doc){
+          if (err) return res.send(500, { error: err });
+          return res.status(200).send(carroJaCadastrado);
+      });
+    } else {
+      res.send("Carro não encontrado");
+    }
+});
 })
 
 app.get('/erro', function(req, res) {
@@ -229,144 +206,84 @@ app.get('/erro', function(req, res) {
 /**
  * @swagger
  *
- * /veiculo/dados:
+ * /veiculo/dados/{id}:
  *   get:
  *     tags:
  *       - Veículos
  *     description: Incluir status do veículo 
  *     produces:
  *       - application/json
+ *     parameters:
+ *       - name: id
+ *         description: Id do carro.
+ *         in: path
+ *         required: true
+ *         type: number
  *     responses:
  *       200:
  *         description: Carro
  *         schema: 
  *           $ref: '#/definitions/Carro'
  */
-app.get('/veiculo/dados', function (req, res) {
-  let carro = {
-    ano : 2019,
-    placa : "BPM-1234",
-    cor : "preto",
-    nome_dono : "Percival Rocha",
-    status : "livre"
-  }
-  res.send(carro);
+app.get('/veiculo/dados/:id', function (req, res) {
+  
+  CarroSchema.findOne({id : req.params.id}, function (erro, carroJaCadastrado) {
+    console.log('carro:' + carroJaCadastrado);
+    if (carroJaCadastrado) {
+        res.send(carroJaCadastrado);
+    } else {
+      res.send("Carro não encontrado");
+    }
+});
 })
 
 /**
  * @swagger
  *
- * /veiculo/corrida:
+ * /veiculo/dados:
  *   post:
  *     tags:
  *       - Veículos
- *     description: Iniciar corrida 
- *     produces:
- *       - application/json
- *     responses:
- *       200:
- *         description: Corrida
- *         schema: 
- *           $ref: '#/definitions/Corrida'
- */
-app.post('/veiculo/corrida', function (req, res) {
-  let carro = {
-    ano : 2019,
-    placa : "BPM-1234",
-    cor : "preto",
-    nome_dono : "Percival Rocha",
-    status : "livre"
-  }
-
-  let passageiro = {
-    nome : "Percival Leme",
-    cpf : "12345678900",
-    idade : 26,
-    sexo : "Masculino"
-  }
-
-  let corrida = {
-    carro : carro,
-    passageiro : passageiro,
-    origem : {
-      endereco : "rua Sampaio Vidal",
-      numero : 100,
-      bairro : "Moooca",
-      cidade : "São Paulo",
-      estado : "SP"
-    },
-    destino : {
-      endereco : "Alameda Bertioga",
-      numero : 310,
-      bairro : "Alphaville",
-      cidade : "Santana de Parnaíba",
-      estado : "SP"
-    },
-    status : "ïniciada",
-    id : 1
-  }
-  res.send(corrida);
-})
-
-/**
- * @swagger
- *
- * /veiculo/corrida/{id}:
- *   put:
- *     tags:
- *       - Veículos
- *     description: Finalizar corrida 
+ *     description: Incluir status do veículo 
  *     produces:
  *       - application/json
  *     parameters:
- *       - name: id
- *         description: Id da corrida a ser finalizada.
- *         in: path
+ *       - name: carro
+ *         description: Objeto carro.
+ *         in: body
  *         required: true
- *         type: number
+ *         type: string
+ *         schema: 
+ *           $ref: '#/definitions/Carro'
  *     responses:
  *       200:
- *         description: Corrida
+ *         description: Carro
  *         schema: 
- *           $ref: '#/definitions/Corrida'
+ *           $ref: '#/definitions/Carro'
  */
-app.put('/veiculo/corrida/:id', function (req, res) {
-  let carro = {
-    ano : 2019,
-    placa : "BPM-1234",
-    cor : "preto",
-    nome_dono : "Percival Rocha",
-    status : "livre"
+app.post('/veiculo/dados', function (req, res) {
+  var carro = req.body;
+  console.log("dados do body: ", req.body);
+  if (!carro.id) {
+    res.status(400);
+    res.send("Id do carro é obrigdat'rio");
   }
-
-  let passageiro = {
-    nome : "Percival Leme",
-    cpf : "12345678900",
-    idade : 26,
-    sexo : "Masculino"
-  }
-
-  let corrida = {
-    carro : carro,
-    passageiro : passageiro,
-    origem : {
-      endereco : "rua Sampaio Vidal",
-      numero : 100,
-      bairro : "Moooca",
-      cidade : "São Paulo",
-      estado : "SP"
-    },
-    destino : {
-      endereco : "Alameda Bertioga",
-      numero : 310,
-      bairro : "Alphaville",
-      cidade : "Santana de Parnaíba",
-      estado : "SP"
-    },
-    status : "ïniciada",
-    id : req.params.id
-  }
-  res.send(corrida);
+  console.log("carros do mongo", CarroSchema);
+  CarroSchema.findOne({id : carro.id}, function (erro, carroJaCadastrado) {
+        console.log('carro:' + carroJaCadastrado);
+        if (carroJaCadastrado) {
+            res.send(carroJaCadastrado);
+        } else {
+          CarroSchema.create(carro, function (erro, carroInserido ) {
+                if (erro) {
+                    res.send(erro);
+                }
+                else {
+                    res.send(carroInserido);
+                }
+            });
+        }
+});
 })
 
 app.listen(port, function() {
