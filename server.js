@@ -98,6 +98,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
  *       - cor
  *       - modelo
  *       - status
+ *       - latitude
+ *       - longitude
  *     properties:
  *       id:
  *         type: Number   
@@ -111,6 +113,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
  *         type: string
  *       status: 
  *         type: string
+ *       latitude:
+ *         type: Number
+ *       longitude:
+ *         type: Number
  */
 
 /**
@@ -187,7 +193,7 @@ app.put('/veiculo/status/:idCarro', function (req, res) {
         var query = {'id' : carroJaCadastrado.id}
         CarroSchema.findOneAndUpdate(query, carroJaCadastrado, {upsert:true}, function(err, doc){
           if (err) return res.send(500, { error: err });
-          return res.status(200).send(carroJaCadastrado);
+          return res.status(200).send(carroJaCadastrado.status);
       });
     } else {
       res.send("Carro não encontrado");
